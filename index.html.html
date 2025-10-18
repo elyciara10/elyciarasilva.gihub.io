@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jornada Psicanalítica - Melanie Klein</title>
+    <meta name="description" content="Jogo educativo sobre psicanálise infantil e os conceitos de Melanie Klein relacionados ao abuso infantil">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            user-select: none;
+        }
+        
+        canvas {
+            border: 2px solid #2c3e50;
+            background: linear-gradient(to bottom, #87CEEB, #98FB98);
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .ui-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 18px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        .mobile-controls {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            pointer-events: auto;
+        }
+        
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            border: 2px solid rgba(255,255,255,0.5);
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+            user-select: none;
+            backdrop-filter: blur(10px);
+        }
+        
+        .control-btn:active {
+            background: rgba(255,255,255,0.5);
+            transform: scale(0.95);
+        }
+        
+        .info-panel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            text-align: center;
+            pointer-events: auto;
+            z-index: 1000;
+            display: none;
+            backdrop-filter: blur(10px);
+            border: 2px solid #3498db;
+        }
+        
+        .info-panel h3 {
+            color: #3498db;
+            margin-bottom: 15px;
+            font-size: 22px;
+        }
+        
+        .info-panel p {
+            line-height: 1.6;
+            margin-bottom: 10px;
+            font-size: 16px;
+            text-align: justify;
+        }
+        
+        .close-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-top: 15px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .close-btn:hover {
+            background: #2980b9;
+        }
+        
+        .menu-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #2c3e50, #4a6741);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            pointer-events: auto;
+            z-index: 1001;
+        }
+        
+        .menu-title {
+            font-size: 32px;
+            margin-bottom: 10px;
+            text-align: center;
+            color: #3498db;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .menu-subtitle {
+            font-size: 18px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #ecf0f1;
+            max-width: 80%;
+            line-height: 1.5;
+        }
+        
+        .start-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+        
+        .start-btn:hover {
+            background: #c0392b;
+            transform: scale(1.05);
+        }
+        
+        .controls-info {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 14px;
+            color: #bdc3c7;
+            max-width: 80%;
+            line-height: 1.4;
+        }
+        
+        .progress-bar {
+            position: absolute;
+            bottom: 100px;
+            left: 20px;
+            right: 20px;
+            height: 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .credits {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .menu-title { font-size: 26px; }
+            .menu-subtitle { font-size: 16px; }
+            .hud { font-size: 16px; top: 10px; left: 10px; }
+            .control-btn { width: 50px; height: 50px; font-size: 18px; }
+            .info-panel { padding: 20px; font-size: 14px; }
+            .info-panel h3 { font-size: 20px; }
+            .controls-info { font-size: 12px; }
+        }
+        
+        @media (max-width: 480px) {
+            .menu-title { font-size: 22px; }
+            .menu-subtitle { font-size: 14px; }
+            .control-btn { width: 45px; height: 45px; font-size: 16px; }
+            .start-btn { padding: 12px 24px; font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    
+    <div class="ui-container">
+        <div class="hud" id="hud">
+            <div>Conceitos Coletados: <span id="score">0</span>/10</div>
+            <div>Nível: <span id="level">1</span></div>
+            <div>Vidas: <span id="lives">3</span> ❤️</div>
+        </div>
+        
+        <div class="mobile-controls" id="mobileControls">
+            <div class="control-btn" id="leftBtn">←</div>
+            <div class="control-btn" id="jumpBtn">↑</div>
+            <div class="control-btn" id="rightBtn">→</div>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <div class="info-panel" id="infoPanel">
+            <h3 id="infoTitle"></h3>
+            <p id="infoContent"></p>
+            <button class="close-btn" onclick="closeInfoPanel()">Continuar Jornada</button>
+        </div>
+        
+        <div class="menu-screen" id="menuScreen">
+            <h1 class="menu-title">🧠 Jornada Psicanalítica</h1>
+            <h2 style="color: #f39c12; font-size: 20px; margin-bottom: 15px;">Conceitos de Melanie Klein</h2>
+            <p class="menu-subtitle">Explore os fundamentos da psicanálise infantil através de uma aventura educativa interativa. Colete frutas do conhecimento para descobrir os conceitos revolucionários de Melanie Klein sobre desenvolvimento psíquico e trauma infantil.</p>
+            <button class="start-btn" onclick="startGame()">🚀 Iniciar Aventura</button>
+            <div class="controls-info">
+                <p><strong>🎮 Como Jogar:</strong></p>
+                <p><strong>Desktop:</strong> Use as setas do teclado ou WASD para mover, Espaço para pular</p>
+                <p><strong>Mobile:</strong> Toque nos botões da tela para controlar o personagem</p>
+                <p><strong>🎯 Objetivo:</strong> Colete as 10 frutas do conhecimento para aprender sobre psicanálise kleiniana</p>
+                <p><strong>⚠️ Cuidado:</strong> Evite os inimigos que representam traumas e medos</p>
+            </div>
+            <div class="credits">
+                <p>Jogo Educativo sobre Psicanálise Infantil | Desenvolvido para fins acadêmicos</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class PsychoanalysisGame {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.gameState = 'menu';
+                this.score = 0;
+                this.level = 1;
+                this.lives = 3;
+                this.entities = [];
+                this.fruits = [];
+                this.enemies = [];
+                this.platforms = [];
+                this.keys = {};
+                this.camera = { x: 0, y: 0 };
+                this.levelWidth = 2400;
+                this.gravity = 0.8;
+                this.lastTime = 0;
+                
+                this.kleinConcepts = [
+                    {
+                        title: "Posição Esquizo-Paranóide (0-6 meses)",
+                        content: "Melanie Klein descreveu esta fase inicial onde a criança experimenta ansiedades persecutórias intensas. O ego ainda fragmentado percebe objetos como totalmente bons ou totalmente maus, sem conseguir integrar aspectos contraditórios. No contexto de abuso infantil, essa posição se manifesta através da dificuldade extrema de processar experiências traumáticas, levando a cisões defensivas severas que podem persistir na vida adulta."
+                    },
+                    {
+                        title: "Posição Depressiva (6+ meses)", 
+                        content: "Fase evolutiva onde a criança começa a reconhecer o objeto total, integrando aspectos bons e maus da mesma pessoa. Surge a capacidade de culpa e a necessidade de reparação. Em situações de abuso, esta integração crucial pode ser severamente prejudicada, mantendo cisões defensivas que impedem o desenvolvimento emocional saudável e a formação de relacionamentos estáveis."
+                    },
+                    {
+                        title: "Objetos Internos",
+                        content: "Representações mentais internalizadas das relações primárias com cuidadores, que formam a base do mundo interno da criança. Klein enfatizou como experiências traumáticas e abusivas criam objetos internos persecutórios e aterrorizantes que continuam a influenciar profundamente toda a vida psíquica, afetando autoestima, relacionamentos e capacidade de confiar no mundo."
+                    },
+                    {
+                        title: "Mecanismo de Cisão",
+                        content: "Defesa psíquica primitiva onde aspectos contraditórios de uma experiência ou pessoa são rigidamente separados para evitar ansiedade insuportável. Em contextos de abuso infantil, a criança frequentemente utiliza a cisão para preservar a imagem do cuidador necessário, separando completamente aspectos amorosos dos aspectos agressivos, impedindo a integração emocional saudável."
+                    },
+                    {
+                        title: "Identificação Projetiva",
+                        content: "Processo inconsciente complexo onde a criança projeta partes indesejadas ou insuportáveis do self no objeto externo e depois tenta controlá-lo. No contexto de abuso, pode manifestar-se através da identificação com o agressor (assumindo características abusivas) ou da projeção intensa da culpa e vergonha como mecanismo defensivo desesperado."
+                    },
+                    {
+                        title: "Ansiedade Persecutória",
+                        content: "Medo primitivo e intenso de ser atacado, destruído ou aniquilado por objetos internos maus. Klein considerava essa ansiedade fundamental no desenvolvimento humano. O abuso infantil intensifica drasticamente essas ansiedades, criando um mundo interno constantemente ameaçador onde a criança se sente perpetuamente em perigo, mesmo em situações objetivamente seguras."
+                    },
+                    {
+                        title: "Impulso Reparatório",
+                        content: "Tendência natural de reparar danos imaginários ou reais causados aos objetos amados, essencial para o desenvolvimento moral e emocional saudável. Klein via a reparação como fundamental para superar a culpa depressiva. Vítimas de abuso frequentemente desenvolvem compulsão reparatória excessiva, assumindo responsabilidade inadequada por danos que não causaram."
+                    },
+                    {
+                        title: "Inveja Primária",
+                        content: "Klein descreveu a inveja como impulso destrutivo precoce dirigido especificamente ao objeto bom e suas capacidades nutritivas. No contexto de trauma infantil, esta inveja pode se manifestar como autodestrutividade compulsiva, sabotagem inconsciente de relacionamentos positivos, ou incapacidade de receber cuidado genuíno devido à destrutividade interna dirigida ao que é bom."
+                    },
+                    {
+                        title: "Fantasias Inconscientes",
+                        content: "Expressões mentais primitivas dos instintos que acompanham e dão significado a toda experiência emocional desde o nascimento. Klein enfatizou como fantasias sobre situações abusivas podem se tornar organizadores psíquicos dominantes, distorcendo profundamente a realidade psíquica da criança e criando padrões relacionais disfuncionais que persistem na vida adulta."
+                    },
+                    {
+                        title: "Elaboração Simbólica do Trauma",
+                        content: "Processo fundamental de integração gradual de experiências traumáticas através do brincar, simbolização e verbalização. Klein revolucionou a compreensão da importância do brincar como meio essencial para processar traumas. A técnica lúdica permite que a criança represente, elabore e gradualmente domine experiências traumáticas, desenvolvendo capacidade de pensar sobre o impensável."
+                    }
+                ];
+                
+                this.setupCanvas();
+                this.setupInput();
+                this.setupAudio();
+                this.createLevel();
+                this.gameLoop();
+            }
+            
+            setupCanvas() {
+                this.resizeCanvas();
+                window.addEventListener('resize', () => this.resizeCanvas());
+            }
+            
+            resizeCanvas() {
+                const maxWidth = Math.min(window.innerWidth - 20, 800);
+                const maxHeight = Math.min(window.innerHeight - 20, 600);
+                const aspect = 800 / 600;
+                
+                if (maxWidth / maxHeight > aspect) {
+                    this.canvas.height = maxHeight;
+                    this.canvas.width = maxHeight * aspect;
+                } else {
+                    this.canvas.width = maxWidth;
+                    this.canvas.height = maxWidth / aspect;
+                }
+                
+                this.scale = this.canvas.width / 800;
+                this.ctx.scale(this.scale, this.scale);
+            }
+            
+            setupInput() {
+                // Keyboard controls
+                document.addEventListener('keydown', (e) => {
+                    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code) ||
+                        e.code.startsWith('Key')) {
+                        e.preventDefault();
+                    }
+                    this.keys[e.code] = true;
+                });
+                
+                document.addEventListener('keyup', (e) => {
+                    this.keys[e.code] = false;
+                });
+                
+                // Mobile touch controls
+                this.setupTouchControls();
+            }
+            
+            setupTouchControls() {
+                const leftBtn = document.getElementById('leftBtn');
+                const rightBtn = document.getElementById('rightBtn');
+                const jumpBtn = document.getElementById('jumpBtn');
+                
+                // Left button
+                leftBtn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.keys['ArrowLeft'] = true;
+                    leftBtn.style.background = 'rgba(255,255,255,0.5)';
+                });
+                leftBtn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.keys['ArrowLeft'] = false;
+                    leftBtn.style.background = 'rgba(255,255,255,0.3)';
+                });
+                
+                // Right button
+                rightBtn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.keys['ArrowRight'] = true;
+                    rightBtn.style.background = 'rgba(255,255,255,0.5)';
+                });
+                rightBtn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.keys['ArrowRight'] = false;
+                    rightBtn.style.background = 'rgba(255,255,255,0.3)';
+                });
+                
+                // Jump button
+                jumpBtn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.keys['Space'] = true;
+                    jumpBtn.style.background = 'rgba(255,255,255,0.5)';
+                });
+                jumpBtn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.keys['Space'] = false;
+                    jumpBtn.style.background = 'rgba(255,255,255,0.3)';
+                });
+            }
+            
+            setupAudio() {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                this.playSound = (frequency, duration, type = 'square', volume = 0.1) => {
+                    try {
+                        const oscillator = this.audioContext.createOscillator();
+                        const gainNode = this.audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(this.audioContext.destination);
+                        
+                        oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+                        oscillator.type = type;
+                        
+                        gainNode.gain.setValueAtTime(volume, this.audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+                        
+                        oscillator.start(this.audioContext.currentTime);
+                        oscillator.stop(this.audioContext.currentTime + duration);
+                    } catch (e) {
+                        console.log('Audio not available');
+                    }
+                };
+            }
+            
+            createLevel() {
+                // Clear existing entities
+                this.entities = [];
+                this.fruits = [];
+                this.enemies = [];
+                this.platforms = [];
+                
+                // Create player
+                this.player = new Player(100, 450);
+                this.entities.push(this.player);
+                
+                // Create platforms with varied layouts
+                const platformData = [
+                    // Ground platforms
+                    {x: 0, y: 550, width: 800, height: 50},
+                    {x: 1600, y: 550, width: 800, height: 50},
+                    
+                    // Floating platforms
+                    {x: 300, y: 450, width: 200, height: 20},
+                    {x: 600, y: 350, width: 150, height: 20},
+                    {x: 900, y: 480, width: 180, height: 20},
+                    {x: 1200, y: 380, width: 200, height: 20},
+                    {x: 1500, y: 280, width: 150, height: 20},
+                    {x: 1800, y: 450, width: 200, height: 20},
+                    {x: 2100, y: 350, width: 180, height: 20},
+                    
+                    // Additional challenge platforms
+                    {x: 800, y: 200, width: 100, height: 20},
+                    {x: 1000, y: 150, width: 120, height: 20},
+                    {x: 1700, y: 200, width: 100, height: 20}
+                ];
+                
+                platformData.forEach(p => {
+                    this.platforms.push(new Platform(p.x, p.y, p.width, p.height));
+                });
+                
+                // Create fruits with strategic positioning
+                const fruitPositions = [
+                    {x: 350, y: 400}, {x: 650, y: 300}, {x: 950, y: 430},
+                    {x: 1250, y: 330}, {x: 1550, y: 230}, {x: 1850, y: 400},
+                    {x: 2150, y: 300}, {x: 400, y: 500}, {x: 850, y: 150}, {x: 2000, y: 500}
+                ];
+                
+                fruitPositions.forEach((pos, index) => {
+                    if (index < this.kleinConcepts.length) {
+                        this.fruits.push(new KnowledgeFruit(pos.x, pos.y, index));
+                    }
+                });
+                
+                // Create enemies representing psychological threats
+                const enemyPositions = [
+                    {x: 500, y: 500}, {x: 800, y: 430}, {x: 1100, y: 500},
+                    {x: 1400, y: 330}, {x: 1700, y: 500}, {x: 2000, y: 300}
+                ];
+                
+                enemyPositions.forEach(pos => {
+                    this.enemies.push(new TraumaEnemy(pos.x, pos.y));
+                });
+            }
+            
+            update(deltaTime) {
+                if (this.gameState !== 'playing') return;
+                
+                // Update camera to follow player
+                const targetCameraX = Math.max(0, Math.min(this.player.x - 400, this.levelWidth - 800));
+                this.camera.x += (targetCameraX - this.camera.x) * 0.1;
+                
+                // Update all entities
+                this.entities.forEach(entity => {
+                    if (entity.active) {
+                        entity.update(deltaTime, this);
+                    }
+                });
+                
+                // Update fruits
+                this.fruits.forEach(fruit => {
+                    if (fruit.active) {
+                        fruit.update(deltaTime);
+                    }
+                });
+                
+                // Update enemies
+                this.enemies.forEach(enemy => {
+                    if (enemy.active) {
+                        enemy.update(deltaTime, this);
+                    }
+                });
+                
+                // Check all collisions
+                this.checkCollisions();
+                
+                // Update UI elements
+                this.updateUI();
+                
+                // Check win/lose conditions
+                this.checkGameState();
+            }
+            
+            checkCollisions() {
+                // Player vs Knowledge Fruits
+                this.fruits.forEach(fruit => {
+                    if (fruit.active && this.checkAABB(this.player, fruit)) {
+                        fruit.active = false;
+                        this.score++;
+                        this.playSound(523, 0.3, 'sine', 0.2);
+                        this.showConceptInfo(fruit.conceptIndex);
+                    }
+                });
+                
+                // Player vs Trauma Enemies
+                this.enemies.forEach(enemy => {
+                    if (enemy.active && this.checkAABB(this.player, enemy)) {
+                        if (this.player.y + this.player.height - 10 < enemy.y && this.player.velocityY > 0) {
+                            // Player defeated enemy by jumping on it
+                            enemy.active = false;
+                            this.player.velocityY = -15;
+                            this.playSound(330, 0.4, 'square', 0.15);
+                        } else if (!this.player.invulnerable) {
+                            // Player was hurt by enemy
+                            this.lives--;
+                            this.player.takeDamage();
+                            this.playSound(165, 0.6, 'sawtooth', 0.3);
+                        }
+                    }
+                });
+            }
+            
+            checkAABB(a, b) {
+                return a.x < b.x + b.width &&
+                       a.x + a.width > b.x &&
+                       a.y < b.y + b.height &&
+                       a.y + a.height > b.y;
+            }
+            
+            showConceptInfo(index) {
+                const concept = this.kleinConcepts[index];
+                const infoPanel = document.getElementById('infoPanel');
+                const infoTitle = document.getElementById('infoTitle');
+                const infoContent = document.getElementById('infoContent');
+                
+                infoTitle.textContent = concept.title;
+                infoContent.textContent = concept.content;
+                infoPanel.style.display = 'block';
+                
+                this.gameState = 'paused';
+            }
+            
+            updateUI() {
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('level').textContent = this.level;
+                document.getElementById('lives').textContent = this.lives;
+                
+                const progressFill = document.getElementById('progressFill');
+                const progressPercentage = (this.score / 10) * 100;
+                progressFill.style.width = progressPercentage + '%';
+            }
+            
+            checkGameState() {
+                if (this.score >= 10) {
+                    this.gameState = 'victory';
+                    this.showVictoryScreen();
+                } else if (this.lives <= 0) {
+                    this.gameState = 'gameover';
+                    this.showGameOverScreen();
+                }
+            }
+            
+            showVictoryScreen() {
+                const menuScreen = document.getElementById('menuScreen');
+                menuScreen.innerHTML = `
+                    <h1 class="menu-title">🎉 Missão Cumprida!</h1>
+                    <h2 style="color: #2ecc71; font-size: 24px; margin-bottom: 20px;">Psicanálise Kleiniana Dominada</h2>
+                    <p class="menu-subtitle">Parabéns! Você completou com sucesso a jornada através dos conceitos fundamentais de Melanie Klein sobre desenvolvimento infantil e trauma psicológico. Agora você possui uma compreensão sólida de como a psicanálise aborda as complexidades do mundo interno da criança.</p>
+                    <button class="start-btn" onclick="restartGame()">🔄 Nova Jornada</button>
+                    <div class="controls-info">
+                        <p><strong>📚 Conhecimento Adquirido:</strong> ${this.score}/10 conceitos</p>
+                        <p><strong>🧠 Conquistas:</strong></p>
+                        <ul style="text-align: left; max-width: 400px; margin: 10px auto;">
+                            <li>Compreensão das posições do desenvolvimento</li>
+                            <li>Conhecimento sobre objetos internos</li>
+                            <li>Domínio dos mecanismos de defesa</li>
+                            <li>Entendimento do processo de elaboração</li>
+                        </ul>
+                        <p>Continue estudando para aprofundar seu conhecimento em psicanálise infantil!</p>
+                    </div>
+                `;
+                menuScreen.style.display = 'flex';
+            }
+            
+            showGameOverScreen() {
+                const menuScreen = document.getElementById('menuScreen');
+                menuScreen.innerHTML = `
+                    <h1 class="menu-title">💔 Jornada Interrompida</h1>
+                    <h2 style="color: #e74c3c; font-size: 20px; margin-bottom: 15px;">O Processo de Aprendizagem Continua</h2>
+                    <p class="menu-subtitle">Como Melanie Klein ensinou, o desenvolvimento é um processo complexo com avanços e retrocessos. Cada tentativa nos aproxima mais da compreensão profunda dos mecanismos psíquicos fundamentais.</p>
+                    <button class="start-btn" onclick="restartGame()">🔄 Recomeçar Análise</button>
+                    <div class="controls-info">
+                        <p><strong>📊 Progresso Atual:</strong> ${this.score}/10 conceitos aprendidos</p>
+                        <p><strong>💡 Dica:</strong> Use os pulos estratégicos para vencer os traumas!</p>
+                        <p>Lembre-se: na psicanálise, cada sessão traz novas descobertas e insights valiosos.</p>
+                    </div>
+                `;
+                menuScreen.style.display = 'flex';
+            }
+            
+            render() {
+                // Reset canvas transformations
+                this.ctx.save();
+                this.ctx.scale(1/this.scale, 1/this.scale);
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.ctx.scale(this.scale, this.scale);
+                
+                if (this.gameState === 'menu') return;
+                
+                // Apply camera transform
+                this.ctx.save();
+                this.ctx.translate(-this.camera.x, -this.camera.y);
+                
+                // Draw game world
+                this.drawBackground();
+                
+                // Draw platforms
+                this.platforms.forEach(platform => platform.render(this.ctx));
+                
+                // Draw entities
+                this.entities.forEach(entity => {
+                    if (entity.active) {
+                        entity.render(this.ctx);
+                    }
+                });
+                
+                // Draw fruits
+                this.fruits.forEach(fruit => {
+                    if (fruit.active) {
+                        fruit.render(this.ctx);
+                    }
+                });
+                
+                // Draw enemies
+                this.enemies.forEach(enemy => {
+                    if (enemy.active) {
+                        enemy.render(this.ctx);
+                    }
+                });
+                
+                this.ctx.restore();
+                this.ctx.restore();
+            }
+            
+            drawBackground() {
+                // Animated sky gradient
+                const gradient = this.ctx.createLinearGradient(0, 0, 0, 600);
+                gradient.addColorStop(0, '#87CEEB');
+                gradient.addColorStop(0.7, '#98FB98');
+                gradient.addColorStop(1, '#90EE90');
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(this.camera.x, this.camera.y, 800, 600);
+                
+                // Animated clouds
+                this.ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                for (let i = 0; i < 8; i++) {
+                    const x = (i * 300) + 150 + Math.sin(Date.now() * 0.0005 + i) * 50;
+                    const y = 80 + Math.sin(Date.now() * 0.001 + i) * 30;
+                    this.drawCloud(x, y, 1 + Math.sin(Date.now() * 0.002 + i) * 0.2);
+                }
+                
+                // Mountains in background
+                this.ctx.fillStyle = 'rgba(139, 69, 19, 0.3)';
+                this.drawMountains();
+            }
+            
+            drawCloud(x, y, scale = 1) {
+                this.ctx.save();
+                this.ctx.scale(scale, scale);
+                this.ctx.beginPath();
+                this.ctx.arc(x/scale, y/scale, 25, 0, Math.PI * 2);
+                this.ctx.arc(x/scale + 25, y/scale, 35, 0, Math.PI * 2);
+                this.ctx.arc(x/scale + 50, y/scale, 25, 0, Math.PI * 2);
+                this.ctx.arc(x/scale + 15, y/scale - 15, 30, 0, Math.PI * 2);
+                this.ctx.arc(x/scale + 35, y/scale - 15, 30, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.restore();
+            }
+            
+            drawMountains() {
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, 400);
+                for (let i = 0; i <= this.levelWidth; i += 100) {
+                    const height = 300 + Math.sin(i * 0.01) * 50;
+                    this.ctx.lineTo(i, height);
+                }
+                this.ctx.lineTo(this.levelWidth, 600);
+                this.ctx.lineTo(0, 600);
+                this.ctx.fill();
+            }
+            
+            gameLoop(currentTime) {
+                // Resume audio context if needed
+                if (this.audioContext.state === 'suspended') {
+                    this.audioContext.resume();
+                }
+                
+                const deltaTime = Math.min((currentTime - this.lastTime) / 16.67, 2);
+                this.lastTime = currentTime;
+                
+                this.update(deltaTime);
+                this.render();
+                
+                requestAnimationFrame(this.gameLoop.bind(this));
+            }
+        }
+        
+        class Player {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 40;
+                this.height = 40;
+                this.velocityX = 0;
+                this.velocityY = 0;
+                this.speed = 5;
+                this.jumpPower = 18;
+                this.onGround = false;
+                this.active = true;
+                this.color = '#e74c3c';
+                this.invulnerable = false;
+                this.invulnerableTime = 0;
+                this.animationFrame = 0;
+            }
+            
+            update(deltaTime, game) {
+                // Handle player input
+                this.handleInput(game);
+                
+                // Apply physics
+                this.applyPhysics(deltaTime, game);
+                
+                // Handle platform collisions
+                this.handlePlatformCollisions(game);
+                
+                // Handle boundaries
+                this.handleBoundaries(game);
+                
+                // Update invulnerability
+                this.updateInvulnerability(deltaTime);
+                
+                // Update animation
+                this.animationFrame += deltaTime * 0.2;
+            }
+            
+            handleInput(game) {
+                // Reset horizontal velocity
+                this.velocityX = 0;
+                
+                // Horizontal movement
+                if (game.keys['ArrowLeft'] || game.keys['KeyA']) {
+                    this.velocityX = -this.speed;
+                }
+                if (game.keys['ArrowRight'] || game.keys['KeyD']) {
+                    this.velocityX = this.speed;
+                }
+                
+                // Jumping
+                if ((game.keys['Space'] || game.keys['ArrowUp'] || game.keys['KeyW']) && this.onGround) {
+                    this.velocityY = -this.jumpPower;
+                    this.onGround = false;
+                    game.playSound(440, 0.15, 'sine', 0.1);
+                }
+            }
+            
+            applyPhysics(deltaTime, game) {
+                // Apply gravity
+                this.velocityY += game.gravity * deltaTime;
+                
+                // Apply movement
+                this.x += this.velocityX * deltaTime;
+                this.y += this.velocityY * deltaTime;
+                
+                // Terminal velocity
+                if (this.velocityY > 20) {
+                    this.velocityY = 20;
+                }
+            }
+            
+            handlePlatformCollisions(game) {
+                this.onGround = false;
+                
+                game.platforms.forEach(platform => {
+                    if (this.x < platform.x + platform.width &&
+                        this.x + this.width > platform.x &&
+                        this.y < platform.y + platform.height &&
+                        this.y + this.height > platform.y) {
+                        
+                        // Landing on top of platform
+                        if (this.velocityY > 0 && this.y < platform.y) {
+                            this.y = platform.y - this.height;
+                            this.velocityY = 0;
+                            this.onGround = true;
+                        }
+                    }
+                });
+            }
+            
+            handleBoundaries(game) {
+                // Horizontal boundaries
+                if (this.x < 0) this.x = 0;
+                if (this.x > game.levelWidth - this.width) {
+                    this.x = game.levelWidth - this.width;
+                }
+                
+                // Falling off the world
+                if (this.y > 650) {
+                    game.lives--;
+                    this.respawn();
+                    game.playSound(220, 0.5, 'sawtooth', 0.2);
+                }
+            }
+            
+            updateInvulnerability(deltaTime) {
+                if (this.invulnerable) {
+                    this.invulnerableTime -= deltaTime;
+                    if (this.invulnerableTime <= 0) {
+                        this.invulnerable = false;
+                    }
+                }
+            }
+            
+            takeDamage() {
+                if (this.invulnerable) return;
+                
+                this.invulnerable = true;
+                this.invulnerableTime = 120; // 2 seconds at 60fps
+                
+                // Knockback effect
+                this.velocityX = -8;
+                this.velocityY = -10;
+            }
+            
+            respawn() {
+                this.x = 100;
+                this.y = 450;
+                this.velocityX = 0;
+                this.velocityY = 0;
+                this.invulnerable = true;
+                this.invulnerableTime = 60;
+            }
+            
+            render(ctx) {
+                ctx.save();
+                
+                // Flashing effect when invulnerable
+                if (this.invulnerable) {
+                    ctx.globalAlpha = Math.sin(this.animationFrame * 8) * 0.5 + 0.5;
+                }
+                
+                // Main body
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                
+                // Face details
+                ctx.fillStyle = 'white';
+                ctx.fillRect(this.x + 8, this.y + 8, 8, 8);   // Left eye
+                ctx.fillRect(this.x + 24, this.y + 8, 8, 8);  // Right eye
+                
+                ctx.fillStyle = 'black';
+                ctx.fillRect(this.x + 10, this.y + 10, 4, 4); // Left pupil
+                ctx.fillRect(this.x + 26, this.y + 10, 4, 4); // Right pupil
+                
+                // Mouth
+                ctx.fillStyle = 'black';
+                ctx.fillRect(this.x + 12, this.y + 24, 16, 4);
+                
+                // Simple animation - slight bobbing when moving
+                if (Math.abs(this.velocityX) > 0 && this.onGround) {
+                    const bobOffset = Math.sin(this.animationFrame * 10) * 2;
+                    ctx.fillStyle = '#c0392b';
+                    ctx.fillRect(this.x, this.y + bobOffset, this.width, 2); // Shadow/feet
+                }
+                
+                ctx.restore();
+            }
+        }
+        
+        class Platform {
+            constructor(x, y, width, height) {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+            }
+            
+            render(ctx) {
+                // Platform base
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                
+                // Grass on top for ground platforms
+                if (this.height > 30) {
+                    ctx.fillStyle = '#228B22';
+                    ctx.fillRect(this.x, this.y - 8, this.width, 8);
+                    
+                    // Grass details
+                    ctx.fillStyle = '#32CD32';
+                    for (let i = 0; i < this.width; i += 20) {
+                        ctx.fillRect(this.x + i, this.y - 10, 2, 4);
+                        ctx.fillRect(this.x + i + 8, this.y - 12, 2, 6);
+                        ctx.fillRect(this.x + i + 16, this.y - 9, 2, 3);
+                    }
+                } else {
+                    // Simple highlight for floating platforms
+                    ctx.fillStyle = '#A0522D';
+                    ctx.fillRect(this.x, this.y, this.width, 4);
+                }
+            }
+        }
+        
+        class KnowledgeFruit {
+            constructor(x, y, conceptIndex) {
+                this.x = x;
+                this.y = y;
+                this.width = 32;
+                this.height = 32;
+                this.conceptIndex = conceptIndex;
+                this.active = true;
+                this.bobOffset = Math.random() * Math.PI * 2;
+                this.rotationOffset = Math.random() * Math.PI * 2;
+                this.colors = [
+                    '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57',
+                    '#ff9ff3', '#54a0ff', '#5f27cd', '#00d2d3', '#ff9f43'
+                ];
+                this.glowIntensity = 0;
+            }
+            
+            update(deltaTime) {
+                this.bobOffset += 0.08 * deltaTime;
+                this.rotationOffset += 0.05 * deltaTime;
+                this.glowIntensity = Math.sin(this.bobOffset * 2) * 0.3 + 0.7;
+            }
+            
+            render(ctx) {
+                const bobY = this.y + Math.sin(this.bobOffset) * 6;
+                const centerX = this.x + this.width / 2;
+                const centerY = bobY + this.height / 2;
+                
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(this.rotationOffset);
+                
+                // Glow effect
+                ctx.shadowColor = this.colors[this.conceptIndex % this.colors.length];
+                ctx.shadowBlur = 15 * this.glowIntensity;
+                
+                // Main fruit body
+                ctx.fillStyle = this.colors[this.conceptIndex % this.colors.length];
+                ctx.beginPath();
+                ctx.arc(0, 0, this.width / 2 - 2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Inner shine
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                ctx.beginPath();
+                ctx.arc(-4, -4, this.width / 4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Klein symbol (K)
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 18px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('K', 0, 2);
+                
+                ctx.restore();
+            }
+        }
+        
+        class TraumaEnemy {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 36;
+                this.height = 36;
+                this.velocityX = -1.5 + Math.random() * 3;
+                this.active = true;
+                this.color = '#8b0000';
+                this.animationPhase = Math.random() * Math.PI * 2;
+                this.moveRange = 150;
+                this.originalX = x;
+            }
+            
+            update(deltaTime, game) {
+                // Sinusoidal movement pattern
+                this.animationPhase += 0.05 * deltaTime;
+                this.x += this.velocityX * deltaTime;
+                
+                // Bounce within range
+                if (Math.abs(this.x - this.originalX) > this.moveRange) {
+                    this.velocityX = -this.velocityX;
+                }
+                
+                // Platform collision detection
+                game.platforms.forEach(platform => {
+                    if (this.x < platform.x + platform.width &&
+                        this.x + this.width > platform.x &&
+                        this.y < platform.y + platform.height &&
+                        this.y + this.height > platform.y) {
+                        
+                        // Bounce off platform edges
+                        if (this.x + this.width/2 < platform.x || this.x + this.width/2 > platform.x + platform.width) {
+                            this.velocityX = -this.velocityX;
+                        }
+                    }
+                });
+                
+                // Boundary checking
+                if (this.x <= 0 || this.x >= game.levelWidth - this.width) {
+                    this.velocityX = -this.velocityX;
+                }
+            }
+            
+            render(ctx) {
+                const centerX = this.x + this.width / 2;
+                const centerY = this.y + this.height / 2;
+                const pulse = Math.sin(this.animationPhase * 3) * 0.1 + 1;
+                
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.scale(pulse, pulse);
+                
+                // Shadow body
+                ctx.fillStyle = this.color;
+                ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
+                
+                // Glowing red eyes
+                ctx.fillStyle = '#ff0000';
+                ctx.shadowColor = '#ff0000';
+                ctx.shadowBlur = 8;
+                ctx.fillRect(-this.width/2 + 6, -this.height/2 + 6, 8, 8);
+                ctx.fillRect(-this.width/2 + 22, -this.height/2 + 6, 8, 8);
+                
+                // Menacing mouth
+                ctx.shadowBlur = 4;
+                ctx.fillStyle = '#ff4444';
+                ctx.beginPath();
+                ctx.moveTo(-this.width/2 + 8, -this.height/2 + 22);
+                ctx.lineTo(-this.width/2 + 14, -this.height/2 + 16);
+                ctx.lineTo(-this.width/2 + 20, -this.height/2 + 22);
+                ctx.lineTo(-this.width/2 + 26, -this.height/2 + 16);
+                ctx.lineTo(-this.width/2 + 32, -this.height/2 + 22);
+                ctx.lineTo(-this.width/2 + 28, -this.height/2 + 26);
+                ctx.lineTo(-this.width/2 + 8, -this.height/2 + 26);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+        }
+        
+        // Global game functions
+        function startGame() {
+            document.getElementById('menuScreen').style.display = 'none';
+            game.gameState = 'playing';
+            game.createLevel();
+        }
+        
+        function restartGame() {
+            document.getElementById('menuScreen').style.display = 'none';
+            game.gameState = 'playing';
+            game.score = 0;
+            game.lives = 3;
+            game.level = 1;
+            game.createLevel();
+        }
+        
+        function closeInfoPanel() {
+            document.getElementById('infoPanel').style.display = 'none';
+            game.gameState = 'playing';
+        }
+        
+        // Initialize the game
+        const game = new PsychoanalysisGame();
+        
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden && game.gameState === 'playing') {
+                game.gameState = 'paused';
+            }
+        });
+        
+        // Prevent context menu on mobile
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+        
+        // Handle window focus
+        window.addEventListener('blur', function() {
+            if (game.gameState === 'playing') {
+                game.gameState = 'paused';
+            }
+        });
+        
+        // Disable zoom on mobile
+        document.addEventListener('touchmove', function(event) {
+            if (event.scale !== 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+        
+        // Handle orientation changes
+        window.addEventListener('orientationchange', function() {
+            setTimeout(() => {
+                game.resizeCanvas();
+            }, 100);
+        });
+    </script>
+</body>
+</html>
